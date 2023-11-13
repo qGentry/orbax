@@ -518,6 +518,7 @@ class CheckpointManager:
       self._checkpointers[k].save(item_dir, item, **kwargs)
 
     self._add_checkpoint_info(step, metrics)
+    
     self._get_old_steps_to_remove()
     # Sync needed to ensure that old steps to remove are retrieved before
     # actually deleting them during finalize, since retrieval can involve
@@ -794,6 +795,8 @@ class CheckpointManager:
   def _get_old_steps_to_remove(self):
     """Collects checkpoints that should be deleted later."""
     # Must have set max_to_keep in order to remove any checkpoints.
+    if jax.process_index() != 0:
+      return
     if self._options.max_to_keep is None:
       return
     # Not enough checkpoints accumulated to consider deletion.
